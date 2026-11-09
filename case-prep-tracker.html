@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Case prep tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style id="css">
+:root{--paper:#F5F7FA;--grid:#E2E7EE;--card:#FFFFFF;--ink:#1D2B4F;--muted:#5B6780;--line:#D3DAE4;--strong:#2F7D5B;--ok:#C28A1C;--weak:#C23B3B;--none:#E4E8EE;--note:#FFF1A8;--noteink:#1D2B4F;--accent:#2B4FB8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#111722;--grid:#1B2330;--card:#18202C;--ink:#E4EAF4;--muted:#9AA6BA;--line:#2A3444;--strong:#4FB386;--ok:#E0A93A;--weak:#E86565;--none:#263041;--note:#3B3515;--noteink:#FFF1A8;--accent:#7C9BF0}}
+:root[data-theme="dark"]{--paper:#111722;--grid:#1B2330;--card:#18202C;--ink:#E4EAF4;--muted:#9AA6BA;--line:#2A3444;--strong:#4FB386;--ok:#E0A93A;--weak:#E86565;--none:#263041;--note:#3B3515;--noteink:#FFF1A8;--accent:#7C9BF0}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font:15px/1.5 Archivo,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:28px;line-height:1.1;font-weight:800;margin:4px 0 2px;letter-spacing:-.01em}
+h2{font-size:19px;font-weight:700;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 18px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 16px}
+.hero{display:grid;gap:16px;grid-template-columns:1fr;margin-bottom:16px}
+@media (min-width:640px){.hero{grid-template-columns:1.1fr .9fr}}
+.note{background:var(--note);color:var(--noteink);padding:18px 18px 14px;border-radius:3px;transform:rotate(-.8deg);box-shadow:0 8px 18px -10px rgba(30,40,70,.45);font-family:Caveat,"Bradley Hand",cursive}
+.note h2{font-family:Caveat,cursive;font-size:30px;font-weight:700;margin:0 0 6px}
+.note ol{margin:0;padding-left:22px;font-size:23px;line-height:1.25}
+.note li{margin:4px 0}
+.note .small{font-size:19px;margin-top:10px;opacity:.85}
+.stats{display:grid;gap:10px;align-content:start}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{font-size:24px;font-weight:800}
+.stat span{display:block;color:var(--muted);font-size:13px}
+.bar{height:6px;background:var(--none);border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 6px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--muted);font-size:13px;white-space:nowrap}
+td.sk{white-space:nowrap;font-weight:500}
+.cell{width:44px;height:30px;border-radius:6px;border:0;font:700 13px Archivo,sans-serif;cursor:pointer;color:#fff}
+.cell.S{background:var(--strong)}.cell.O{background:var(--ok)}.cell.N{background:var(--weak)}.cell.x{background:var(--none);color:var(--muted)}
+.cell:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted);margin:10px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.pat{display:grid;grid-template-columns:130px 1fr 34px;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+.pat .track{height:10px;background:var(--none);border-radius:5px;overflow:hidden}
+.pat .track i{display:block;height:100%;background:var(--weak)}
+details.case{border:1px solid var(--line);border-radius:8px;margin:0 0 10px;background:var(--card)}
+details.case summary{cursor:pointer;padding:12px 14px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details.case summary::-webkit-details-marker{display:none}
+.cn{font-weight:700}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.verdict{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff}
+.v-right{background:var(--strong)}.v-wrong{background:var(--weak)}.v-mis{background:var(--ok)}
+.cbody{padding:0 14px 14px}
+.cbody h3{font-size:14px;margin:12px 0 4px}
+.cbody ul{margin:0;padding-left:18px}
+.cbody p{margin:4px 0}
+.muted{color:var(--muted)}
+.checks label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.checks input{margin-top:4px;accent-color:var(--accent);width:17px;height:17px;flex:none}
+.checks label.done span{color:var(--muted);text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.btn{font:600 14px Archivo,sans-serif;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.danger{color:var(--weak)}
+.fw{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0 0 14px}
+.fw b{display:block}
+.fw p{margin:2px 0;font-size:14px}
+.timeline{display:grid;gap:8px}
+.ph{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.ph.now{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.ph b{font-size:14px}
+form label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input[type=text],input[type=date],select,textarea{width:100%;font:15px Archivo,sans-serif;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.two{display:grid;gap:10px;grid-template-columns:1fr}
+@media (min-width:560px){.two{grid-template-columns:1fr 1fr}}
+.rate{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);font-size:14px}
+.seg{display:flex;gap:4px}
+.seg button{width:36px;height:30px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font:700 12px Archivo,sans-serif;cursor:pointer}
+.seg button.on.S{background:var(--strong);color:#fff;border-color:var(--strong)}
+.seg button.on.O{background:var(--ok);color:#fff;border-color:var(--ok)}
+.seg button.on.N{background:var(--weak);color:#fff;border-color:var(--weak)}
+.seg button.on.x{background:var(--none);color:var(--ink)}
+.savebar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);display:none;justify-content:center;gap:10px;align-items:center;z-index:5}
+.savebar.show{display:flex}
+.msg{font-size:13px;color:var(--muted)}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--paper);display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin:0 0 12px}
+.nav a{white-space:nowrap;font-size:13px;font-weight:600;color:var(--ink);text-decoration:none;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+@media (prefers-reduced-motion:reduce){.note{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<div class="savebar" id="savebar"><span class="msg" id="savemsg">Unsaved rating changes</span><button class="btn primary" id="savebtn">Save changes</button></div>
+<script type="application/json" id="state">{"skills": [{"id": "restate", "name": "Restate prompt"}, {"id": "clar", "name": "Clarifying Qs"}, {"id": "struct", "name": "Structure"}, {"id": "exhibit", "name": "Exhibit reading"}, {"id": "math", "name": "Math"}, {"id": "brain", "name": "Brainstorming"}, {"id": "judge", "name": "Synthesis and judgment"}, {"id": "rec", "name": "Recommendation"}, {"id": "delivery", "name": "Concise delivery"}, {"id": "notes", "name": "Note-taking"}], "cases": [{"id": "c1", "name": "Sample: regional gym chain profitability", "type": "Profitability", "partner": "Practice partner", "date": "", "mine": "Close two underused locations and shift members to nearby sites", "correct": "Same call; should have quantified churn risk first", "verdict": "right", "ratings": {"restate": "O", "clar": "N", "struct": "N", "exhibit": "N", "math": "S", "brain": "N", "judge": "S", "rec": "O", "delivery": "O", "notes": "N"}, "wins": ["Laid out the math approach before computing"], "fixes": []}], "focus": ["Ask for time before every answer", "Name the bucket count, then the buckets", "Ask the objective question first", "Rec: X because Y, risk Z, next steps W"], "focusNote": "Tell your partner which mechanics you are working on", "checklist": ["Restate the prompt in ~30s", "Clarify objective, context, business model", "Ask for the numbers you'll need: target, investment, who decides or uses", "Say \"I'll take a moment\" before structuring", "State bucket count, then lead with a hypothesis", "Exhibits: overview, insight, what to compute. Talk while reading", "Brainstorm in 2-3 buckets, fast, no unprompted depth", "Circle takeaways on paper as you go", "Rec in under 2m with % framing; take a side", "Ask yourself: is the right answer no?"], "milestone": 15, "mechanicsBlock": "Cases 4-9: mechanics only", "cadence": [{"from": "2026-09-01", "to": "2026-10-14", "label": "Now to mid-Oct", "target": "2 / week", "n": 2}, {"from": "2026-10-15", "to": "2026-11-30", "label": "Mid-Oct to Nov", "target": "3 / week", "n": 3}, {"from": "2026-12-01", "to": "2026-12-31", "label": "December", "target": "1-2 / day", "n": 7}, {"from": "2027-01-01", "to": "2027-01-31", "label": "January", "target": "Interviews", "n": 0}], "events": [{"date": "", "label": "Coffee chat with a consultant at your target firm"}, {"date": "", "label": "Book mock cases with second-years"}], "frameworks": [{"type": "Clarifying questions", "b": ["Objective, context (geography, scope), business model", "Plus: target, investment required, who uses or administers"]}, {"type": "Profitability", "b": ["Profit: revenue (P x Q), costs (variable: materials, energy, labor; fixed: capex)", "Market: category shrinking? who is gaining share?", "Others: distribution, upstream supply, customer preferences"]}, {"type": "Market share", "b": ["Market, Customer, Competition", "Or 4Ps (product, price, place, promotion) or 5Cs"]}, {"type": "Pricing / market entry", "b": ["Market, Pricing, Capabilities, Risks", "Pricing: cost-based (at or below status quo) vs value-based (premium for added function)"]}, {"type": "Cost reduction (people)", "b": ["Internal direct: wages, bonuses, recruiting, training, turnover", "Internal indirect: knowledge loss, morale, culture", "External: wage inflation, competitor poaching", "Alt lens: employee lifecycle (hire, onboard, work, turnover)"]}, {"type": "Recommendation", "b": ["My recommendation is X, because Y; the risk is Z; next steps are W", "Use % framing; turn uncertainties into risks and next steps"]}], "timing": [["Restate", "30s", "~30s"], ["Clarifying", "~1m30s", "<2m"], ["Structure", "~1m30s", "1.5-2m"], ["Exhibit", "Narrate at once", "~2.5m"], ["Brainstorm", "10-20s", "~5m"], ["Recommendation", "~1m", "<2m"]]}</script>
+<script id="app">
+(function(){
+var S=JSON.parse(document.getElementById('state').textContent);try{var _saved=JSON.parse(localStorage.getItem('cpt_state')||'null');if(_saved)S=_saved}catch(e){}
+var art=null,canWrite=true,dirty=false,delArm=null;
+var ORDER=['S','O','N',''];
+var LBL={S:'S',O:'OK',N:'NW','':'-'};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function iso(d){var z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10)}
+function today(){return iso(new Date())}
+function ls(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k)||'null')}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+function phase(){var t=today();for(var i=0;i<S.cadence.length;i++){var c=S.cadence[i];if(t>=c.from&&t<=c.to)return c}return S.cadence[S.cadence.length-1]}
+function weekCount(){var d=new Date();var day=(d.getDay()+6)%7;var m=new Date(d);m.setDate(d.getDate()-day);var mon=iso(m);return S.cases.filter(function(c){return c.date&&c.date>=mon&&c.date<=today()}).length}
+function daysTo(ds){var a=new Date(ds+'T00:00:00'),b=new Date(today()+'T00:00:00');return Math.round((a-b)/86400000)}
+
+function hero(){
+ var p=phase(),wc=weekCount(),n=S.cases.length,pct=Math.min(100,Math.round(n/S.milestone*100));
+ var ev=S.events.filter(function(e){return e.date&&e.date>=today()}).sort(function(a,b){return a.date<b.date?-1:1})[0];
+ return '<div class="hero"><div class="note"><h2>Next case, watch for:</h2><ol>'+S.focus.map(function(f){return '<li>'+esc(f)+'</li>'}).join('')+'</ol><div class="small">'+esc(S.focusNote)+'</div></div>'+
+ '<div class="stats"><div class="stat"><b>'+n+' of '+S.milestone+'</b><span>Cases done. Aim for a clear step up by case '+S.milestone+'</span><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+
+ '<div class="stat"><b>'+wc+' this week</b><span>Target now: '+esc(p.target)+' ('+esc(p.label)+'). Counts dated cases only</span></div>'+
+ (ev?'<div class="stat"><b>'+daysTo(ev.date)+' days</b><span>to '+esc(ev.label)+' ('+esc(ev.date)+')</span></div>':'')+'</div></div>';
+}
+function nav(){return '<nav class="nav" aria-label="Sections"><a href="#checklist">Checklist</a><a href="#skills">Skills</a><a href="#patterns">Patterns</a><a href="#log">Case log</a><a href="#plan">Plan</a><a href="#frameworks">Frameworks</a><a href="#add">Log a case</a></nav>'}
+function checklist(){
+ var st=ls('ct-checks')||{};
+ return '<section id="checklist"><h2>Pre-case checklist</h2><p class="muted" style="margin:0 0 8px">Run through before and during each case. Ticks stay on this device only.</p><div class="checks">'+
+ S.checklist.map(function(c,i){var on=st[i];return '<label class="'+(on?'done':'')+'"><input type="checkbox" data-chk="'+i+'"'+(on?' checked':'')+'><span>'+(i+1)+'. '+esc(c)+'</span></label>'}).join('')+
+ '</div><div class="row" style="margin-top:10px"><button class="btn" id="resetchk">Reset for next case</button></div></section>';
+}
+function skills(){
+ var head='<tr><th>Skill</th>'+S.cases.map(function(c,i){return '<th title="'+esc(c.name)+'">C'+(i+1)+'</th>'}).join('')+'</tr>';
+ var rows=S.skills.map(function(s){return '<tr><td class="sk">'+esc(s.name)+'</td>'+S.cases.map(function(c){var r=(c.ratings||{})[s.id]||'';return '<td><button class="cell '+(r||'x')+'" data-case="'+c.id+'" data-skill="'+s.id+'" aria-label="'+esc(s.name)+' in '+esc(c.name)+': '+LBL[r]+'">'+LBL[r]+'</button></td>'}).join('')+'</tr>'}).join('');
+ return '<section id="skills"><h2>Skill scorecard</h2><div class="scroll"><table>'+head+rows+'</table></div>'+
+ '<div class="legend"><span><i style="background:var(--strong)"></i>Strong</span><span><i style="background:var(--ok)"></i>OK</span><span><i style="background:var(--weak)"></i>Needs work</span><span><i style="background:var(--none)"></i>Not assessed</span></div>'+
+ '<p class="muted" style="font-size:13px;margin:8px 0 0">Tap a cell to change it, then save. '+S.cases.map(function(c,i){return 'C'+(i+1)+' '+esc(c.name)}).join(', ')+'.</p></section>';
+}
+function patterns(){
+ var list=S.skills.map(function(s){var nw=0,as=0,last='';S.cases.forEach(function(c){var r=(c.ratings||{})[s.id];if(r){as++;last=r;if(r==='N')nw++}});return {s:s,nw:nw,as:as,last:last}}).filter(function(x){return x.as>0}).sort(function(a,b){return b.nw-a.nw||b.as-a.as});
+ var max=Math.max(1,S.cases.length);
+ var repeat=list.filter(function(x){return x.nw>=2}).map(function(x){return x.s.name});
+ var strong=list.filter(function(x){return x.nw===0&&x.last==='S'}).map(function(x){return x.s.name});
+ return '<section id="patterns"><h2>Recurring patterns</h2>'+
+ list.map(function(x){return '<div class="pat"><span>'+esc(x.s.name)+'</span><span class="track"><i style="width:'+(x.nw/max*100)+'%"></i></span><span class="muted">'+x.nw+'/'+x.as+'</span></div>'}).join('')+
+ '<p style="margin:12px 0 4px"><b>Repeat offenders:</b> '+(repeat.length?esc(repeat.join(', ')):'none yet')+'</p>'+
+ '<p style="margin:0"><b>Reliable strengths:</b> '+(strong.length?esc(strong.join(', ')):'none yet')+'</p>'+
+ '<p class="muted" style="font-size:13px;margin:8px 0 0">Bars show needs-work count out of cases where the skill was assessed.</p></section>';
+}
+function log(){
+ var V={right:['v-right','Right call'],wrong:['v-wrong','Wrong call'],mis:['v-mis','Misframed']};
+ return '<section id="log"><h2>Case log</h2>'+S.cases.slice().reverse().map(function(c){var i=S.cases.indexOf(c);var v=V[c.verdict]||V.mis;
+ return '<details class="case"><summary><span class="cn">C'+(i+1)+'. '+esc(c.name)+'</span><span class="verdict '+v[0]+'">'+v[1]+'</span><span class="tag">'+esc(c.type)+'</span><span class="tag">'+esc(c.partner)+'</span><span class="muted" style="font-size:13px">'+(c.date?esc(c.date):'Sep 2026')+'</span></summary><div class="cbody">'+
+ '<h3>My answer</h3><p>'+esc(c.mine)+'</p><h3>Right answer</h3><p>'+esc(c.correct)+'</p>'+
+ (c.wins&&c.wins.length?'<h3>What worked</h3><ul>'+c.wins.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul>':'')+
+ (c.fixes&&c.fixes.length?'<h3>Fix next time</h3><ul>'+c.fixes.map(function(w){return '<li>'+esc(w)+'</li>'}).join('')+'</ul>':'')+
+ '<div class="row" style="margin-top:12px"><button class="btn danger" data-del="'+c.id+'">'+(delArm===c.id?'Tap again to delete':'Delete case')+'</button></div></div></details>'}).join('')+'</section>';
+}
+function plan(){
+ var p=phase();
+ return '<section id="plan"><h2>Plan</h2><div class="timeline">'+S.cadence.map(function(c){return '<div class="ph'+(c===p?' now':'')+'"><b>'+esc(c.target)+'</b><span>'+esc(c.label)+(c===p?' (now)':'')+'</span></div>'}).join('')+'</div>'+
+ '<p style="margin:12px 0 4px"><b>'+esc(S.mechanicsBlock)+'.</b> Practice with people, not solo. Networking wins if the schedule gets tight.</p>'+
+ '<h2 style="margin-top:16px">Upcoming and open</h2><ul style="margin:0;padding-left:18px">'+S.events.map(function(e){return '<li>'+(e.date?'<b>'+esc(e.date)+'</b> ':'')+esc(e.label)+'</li>'}).join('')+'</ul>'+
+ '<h2 style="margin-top:16px">Timing targets</h2><div class="scroll"><table><tr><th>Step</th><th>Coach A</th><th>Coach B</th></tr>'+S.timing.map(function(t){return '<tr><td>'+esc(t[0])+'</td><td>'+esc(t[1])+'</td><td>'+esc(t[2])+'</td></tr>'}).join('')+'</table></div><p class="muted" style="font-size:13px;margin:8px 0 0">Early on, treat timing as informational; don\'t optimize it yet.</p></section>';
+}
+function frameworks(){return '<section id="frameworks"><h2>Framework library</h2>'+S.frameworks.map(function(f){return '<div class="fw"><b>'+esc(f.type)+'</b>'+f.b.map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>'}).join('')+'</section>'}
+var draft={ratings:{}};
+function form(){
+ return '<section id="add"><h2>Log a case</h2><form id="f" onsubmit="return false">'+
+ '<div class="two"><div><label for="fn">Case name</label><input type="text" id="fn" required></div><div><label for="fd">Date</label><input type="date" id="fd" value="'+today()+'"></div></div>'+
+ '<div class="two"><div><label for="ft">Case type</label><input type="text" id="ft" list="types" placeholder="Profitability, market entry..."><datalist id="types">'+['Profitability','Market share','Market entry','Pricing','Cost reduction','M&A','Growth','Operations'].map(function(t){return '<option value="'+t+'">'}).join('')+'</datalist></div><div><label for="fp">Partner</label><input type="text" id="fp"></div></div>'+
+ '<label for="fm">My answer</label><input type="text" id="fm"><label for="fc">Right answer</label><input type="text" id="fc">'+
+ '<label for="fv">Verdict</label><select id="fv"><option value="right">Right call</option><option value="wrong">Wrong call</option><option value="mis">Misframed</option></select>'+
+ '<label>Skill ratings</label>'+S.skills.map(function(s){return '<div class="rate"><span>'+esc(s.name)+'</span><span class="seg">'+['S','O','N',''].map(function(r){return '<button type="button" class="'+(r||'x')+(draft.ratings[s.id]===r||(!draft.ratings[s.id]&&r==='')?' on':'')+'" data-rs="'+s.id+'" data-rv="'+r+'" aria-label="'+esc(s.name)+' '+LBL[r]+'">'+LBL[r]+'</button>'}).join('')+'</span></div>'}).join('')+
+ '<label for="fw">What worked (one per line)</label><textarea id="fw"></textarea>'+
+ '<label for="fx">Fix next time (one per line)</label><textarea id="fx"></textarea>'+
+ '<label for="ff">Watch for next case (one per line, replaces the note)</label><textarea id="ff">'+esc(S.focus.join('\n'))+'</textarea>'+
+ '<div class="row" style="margin-top:14px"><button class="btn primary" id="addbtn" type="button">Save case</button><span class="msg" id="addmsg"></span></div></form></section>';
+}
+function render(){
+ var root=document.getElementById('root');
+ root.innerHTML='<h1>Case prep tracker</h1><p class="sub">Where you are, what keeps slipping, what to do next.</p>'+hero()+nav()+checklist()+skills()+patterns()+log()+plan()+frameworks()+form();
+ bind();
+}
+function lines(id){return document.getElementById(id).value.split('\n').map(function(s){return s.trim()}).filter(Boolean)}
+function bind(){
+ document.querySelectorAll('[data-chk]').forEach(function(el){el.onchange=function(){var st=ls('ct-checks')||{};st[el.dataset.chk]=el.checked;ls('ct-checks',st);el.parentNode.className=el.checked?'done':''}});
+ var r=document.getElementById('resetchk');if(r)r.onclick=function(){ls('ct-checks',{});render()};
+ document.querySelectorAll('.cell').forEach(function(el){el.onclick=function(){if(!canWrite)return;var c=S.cases.filter(function(x){return x.id===el.dataset.case})[0];c.ratings=c.ratings||{};var cur=c.ratings[el.dataset.skill]||'';var nx=ORDER[(ORDER.indexOf(cur)+1)%ORDER.length];if(nx)c.ratings[el.dataset.skill]=nx;else delete c.ratings[el.dataset.skill];dirty=true;keepForm();render();bar()}});
+ document.querySelectorAll('[data-del]').forEach(function(el){el.onclick=function(){if(!canWrite)return;var id=el.dataset.del;if(delArm!==id){delArm=id;keepForm();render();var d=document.querySelector('[data-del="'+id+'"]');if(d){d.closest('details').open=true}return}S.cases=S.cases.filter(function(c){return c.id!==id});delArm=null;save('Deleted')}});
+ document.querySelectorAll('[data-rs]').forEach(function(el){el.onclick=function(){keepForm();if(el.dataset.rv)draft.ratings[el.dataset.rs]=el.dataset.rv;else delete draft.ratings[el.dataset.rs];render();restoreForm();document.getElementById('add').scrollIntoView({block:'nearest'})}});
+ document.getElementById('addbtn').onclick=function(){
+  var name=document.getElementById('fn').value.trim();var m=document.getElementById('addmsg');
+  if(!name){m.textContent='Add a case name to save.';return}
+  if(!canWrite){m.textContent='This view is read-only.';return}
+  var focus=lines('ff');
+  S.cases.push({id:'c'+Date.now(),name:name,date:document.getElementById('fd').value,type:document.getElementById('ft').value.trim(),partner:document.getElementById('fp').value.trim(),mine:document.getElementById('fm').value.trim(),correct:document.getElementById('fc').value.trim(),verdict:document.getElementById('fv').value,ratings:draft.ratings,wins:lines('fw'),fixes:lines('fx')});
+  if(focus.length)S.focus=focus.slice(0,5);
+  save('Case saved');
+ };
+ restoreForm();
+}
+var FIELDS=['fn','fd','ft','fp','fm','fc','fv','fw','fx','ff'];var formVals=null;
+function keepForm(){var f=document.getElementById('f');if(!f)return;formVals={};FIELDS.forEach(function(id){formVals[id]=document.getElementById(id).value})}
+function restoreForm(){if(!formVals)return;FIELDS.forEach(function(id){var e=document.getElementById(id);if(e)e.value=formVals[id]});formVals=null}
+function bar(){var b=document.getElementById('savebar');b.className='savebar'+(dirty?' show':'')}
+function buildDoc(){
+ var css=document.getElementById('css').textContent,app=document.getElementById('app').textContent;
+ var json=JSON.stringify(S).replace(/</g,'\\u003c');
+ return '<!doctype html>\n<html lang="en"><head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<title>Case prep tracker</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" rel="stylesheet">\n<style id="css">'+css+'</style>\n</head>\n<body>\n<div class="wrap" id="root"></div>\n<div class="savebar" id="savebar"><span class="msg" id="savemsg">Unsaved rating changes</span><button class="btn primary" id="savebtn">Save changes</button></div>\n<script type="application/json" id="state">'+json+'<\/script>\n<script id="app">'+app+'<\/script>\n</body></html>';
+}
+function readOnly(msg){canWrite=false;dirty=false;bar();var m=document.getElementById('addmsg');if(m)m.textContent=msg}
+function save(ok){
+ var m=document.getElementById('addmsg'),sm=document.getElementById('savemsg');
+ if(!art){ls('cpt_state',S);dirty=false;if(m)m.textContent=ok;if(sm)sm.textContent='Saved in this browser';render();bar();return}
+ if(sm)sm.textContent='Saving...';if(m)m.textContent='Saving...';
+ art.publish(buildDoc()).then(function(){if(m)m.textContent=ok}).catch(function(e){var c=e&&e.code;
+  if(c==='conflict')return;
+  if(c==='not_writer'||c==='not_granted'||c==='consent_required'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed'){readOnly('This view is read-only.');return}
+  if(c==='rate_limited'){if(sm)sm.textContent='Saving too often. Wait a moment, then save';if(m)m.textContent='Saving too often. Wait a moment, then save.';return}
+  if(sm)sm.textContent='Save failed. Try again';if(m)m.textContent='Save failed. Try again.'});
+}
+render();
+document.getElementById('savebtn').onclick=function(){save('Saved')};
+if(window.claude&&window.claude.use){window.claude.use('artifact').then(function(a){art=a;if(!a){canWrite=false}}).catch(function(){})}
+})();
+</script>
+</body></html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case Interview Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one-screen tool. Big live clock for the current phase on top, phase rail with splits below. */
+  --bg: #f3f4f7;
+  --panel: #ffffff;
+  --ink: #17202e;
+  --muted: #5b6577;
+  --line: #d9dde5;
+  --accent: #2a4fd6;
+  --ok: #1d8a55;
+  --warn: #c9850a;
+  --over: #c8323a;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141d; --panel: #171e2a; --ink: #e8ecf3; --muted: #95a0b3; --line: #2a3445;
+    --accent: #7b98ff; --ok: #3fc489; --warn: #f0b13c; --over: #ff6b72; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141d; --panel: #171e2a; --ink: #e8ecf3; --muted: #95a0b3; --line: #2a3445;
+  --accent: #7b98ff; --ok: #3fc489; --warn: #f0b13c; --over: #ff6b72; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+select, input[type=text] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+input[type=text] { min-width: 0; flex: 1 1 180px; }
+button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 9px 14px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: default; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.live { display: grid; gap: 10px; border-left: 8px solid var(--line); transition: border-color .2s; }
+.live.s-ok { border-left-color: var(--ok); }
+.live.s-warn { border-left-color: var(--warn); }
+.live.s-over { border-left-color: var(--over); }
+.live.flash { animation: flash .5s 4; }
+@keyframes flash { 50% { background: color-mix(in srgb, var(--over) 22%, var(--panel)); } }
+@media (prefers-reduced-motion: reduce) { .live.flash { animation: none; } }
+.phase-name { font-family: var(--display); font-weight: 600; font-size: 22px; color: var(--muted); }
+.clock { font-family: var(--display); font-weight: 700; font-size: clamp(64px, 18vw, 120px); line-height: .95; font-variant-numeric: tabular-nums; }
+.clock.over { color: var(--over); }
+.sub { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--line); color: var(--ink); }
+.pill.ok { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+.pill.over { background: color-mix(in srgb, var(--over) 20%, transparent); color: var(--over); }
+.bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s linear, background .2s; }
+.controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 18px; padding: 16px; }
+.hint { color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; }
+tr.current td { font-weight: 600; }
+tr.current td:first-child::before { content: "\25B6\00a0"; color: var(--accent); }
+.tablewrap { overflow-x: auto; }
+.foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; }
+.toast { color: var(--ok); font-size: 13px; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Case Interview Timer</h1>
+    <div class="row">
+      <label for="preset" class="hint">Mode</label>
+      <select id="preset">
+        <option value="full">Full case (25 min, BCG style)</option>
+        <option value="structure">Structuring rep (60s + 90s)</option>
+        <option value="rec">Recommendation drill (30s + 60s)</option>
+      </select>
+      <label class="hint" for="sound"><input type="checkbox" id="sound" checked> Sound</label>
+    </div>
+  </header>
+
+  <div class="row">
+    <label for="caseName" class="hint">Case</label>
+    <input type="text" id="caseName" placeholder="e.g. Summit Suites" value="">
+  </div>
+
+  <section class="panel live" id="live" aria-live="polite">
+    <div class="row" style="justify-content:space-between">
+      <span class="phase-name" id="phaseName">Ready</span>
+      <span class="pill" id="statePill">Not started</span>
+    </div>
+    <div class="clock" id="clock">0:00</div>
+    <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+    <div class="sub">
+      <span>Target <b id="target">-</b></span>
+      <span id="remainWrap">Left <b id="remain">-</b></span>
+      <span>Total <b id="total">0:00</b> of <b id="totalTarget">25:00</b></span>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="primary" id="nextBtn">Start case</button>
+    <button id="pauseBtn" disabled>Pause</button>
+    <button id="undoBtn" disabled>Undo mark</button>
+  </div>
+  <p class="hint">Tap the big button (or press Space) each time you finish a phase. It beeps at 30 seconds left, three times when the target is up, and once for every extra minute over.</p>
+
+  <section class="panel">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Phase</th><th class="num">Target</th><th class="num">Actual</th><th class="num">Diff</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">
+    <div class="row">
+      <button id="copyBtn">Copy splits</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <span class="toast" id="toast"></span>
+  </div>
+  <p class="hint">After the case, tap Copy splits and paste them to Claude in chat (or read them out on the call) to log them against your targets.</p>
+</div>
+
+<script>
+const PRESETS = {
+  full: [
+    ["Playback + clarifying", 120],
+    ["Structure (silent)", 90],
+    ["Present structure", 120],
+    ["Analysis: exhibits + math", 900],
+    ["Brainstorm", 180],
+    ["Recommendation prep", 30],
+    ["Recommendation", 60]
+  ],
+  structure: [["Structure (silent)", 60], ["Present structure", 90]],
+  rec: [["Prep", 30], ["Deliver recommendation", 60]]
+};
+const $ = id => document.getElementById(id);
+let phases = [], idx = -1, running = false, phaseStart = 0, pausedAt = 0, splits = [], alerted = {};
+let audio = null;
+
+function fmt(sec, signed) {
+  const neg = sec < 0; sec = Math.abs(Math.round(sec));
+  const s = Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+  return signed ? (neg ? "-" : "+") + s : s;
+}
+function now() { return performance.now() / 1000; }
+function elapsed() { return idx < 0 ? 0 : (running ? now() : pausedAt) - phaseStart; }
+
+function ensureAudio() {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+  } catch (e) { audio = null; }
+}
+function beep(times, freq) {
+  if (!$("sound").checked || !audio) return;
+  try {
+    for (let i = 0; i < times; i++) {
+      const o = audio.createOscillator(), g = audio.createGain();
+      const t = audio.currentTime + i * 0.28;
+      o.frequency.value = freq; o.type = "sine";
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.4, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.24);
+    }
+  } catch (e) {}
+  try { navigator.vibrate && navigator.vibrate(times > 1 ? [200, 100, 200, 100, 200] : 150); } catch (e) {}
+}
+function flash() {
+  const el = $("live"); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+
+function load(preset) {
+  phases = PRESETS[preset].map(p => ({ name: p[0], target: p[1] }));
+  idx = -1; running = false; splits = []; alerted = {};
+  $("totalTarget").textContent = fmt(phases.reduce((a, p) => a + p.target, 0));
+  $("nextBtn").textContent = preset === "full" ? "Start case" : "Start";
+  render();
+}
+
+function next() {
+  ensureAudio();
+  if (idx >= 0 && idx < phases.length) splits[idx] = elapsed();
+  if (idx === phases.length - 1) { idx = phases.length; running = false; beep(1, 660); render(); return; }
+  if (idx >= phases.length) return;
+  idx++; running = true; phaseStart = now(); alerted = {};
+  render();
+}
+function pause() {
+  if (idx < 0 || idx >= phases.length) return;
+  if (running) { pausedAt = now(); running = false; }
+  else { phaseStart += now() - pausedAt; running = true; }
+  render();
+}
+function undo() {
+  if (idx <= 0) return;
+  const done = idx >= phases.length;
+  idx = done ? phases.length - 1 : idx - 1;
+  const prev = splits[idx] || 0;
+  splits.length = idx;
+  phaseStart = now() - prev; running = true; alerted = { warn: true, up: true, over: Math.floor(Math.max(0, prev - phases[idx].target) / 60) };
+  render();
+}
+function reset() { load($("preset").value); }
+
+function tick() {
+  if (running && idx >= 0 && idx < phases.length) {
+    const p = phases[idx], e = elapsed(), left = p.target - e;
+    if (p.target >= 60 && left <= 30 && left > 0 && !alerted.warn) { alerted.warn = true; beep(1, 740); }
+    if (left <= 0 && !alerted.up) { alerted.up = true; beep(3, 980); flash(); }
+    if (left <= 0) {
+      const mins = Math.floor(-left / 60);
+      if (mins >= 1 && (alerted.over || 0) < mins) { alerted.over = mins; beep(1, 980); flash(); }
+    }
+  }
+  render();
+}
+
+function render() {
+  const done = idx >= phases.length;
+  const live = $("live");
+  const totalElapsed = splits.reduce((a, b) => a + (b || 0), 0) + (idx >= 0 && !done ? elapsed() : 0);
+  $("total").textContent = fmt(totalElapsed);
+  live.classList.remove("s-ok", "s-warn", "s-over");
+  const pill = $("statePill");
+  if (idx < 0) {
+    $("phaseName").textContent = "Ready: " + phases[0].name + " first";
+    $("clock").textContent = "0:00"; $("clock").classList.remove("over");
+    $("target").textContent = fmt(phases[0].target); $("remain").textContent = "-";
+    $("barFill").style.width = "0%"; pill.className = "pill"; pill.textContent = "Not started";
+  } else if (done) {
+    $("phaseName").textContent = "Case complete";
+    $("clock").textContent = fmt(totalElapsed); $("clock").classList.remove("over");
+    $("target").textContent = $("totalTarget").textContent; $("remain").textContent = "-";
+    $("barFill").style.width = "100%"; pill.className = "pill"; pill.textContent = "Done";
+  } else {
+    const p = phases[idx], e = elapsed(), left = p.target - e, frac = Math.min(1, e / p.target);
+    const state = left <= 0 ? "over" : left <= Math.max(10, p.target * 0.2) ? "warn" : "ok";
+    live.classList.add("s-" + state);
+    $("phaseName").textContent = (idx + 1) + " of " + phases.length + ": " + p.name;
+    $("clock").textContent = fmt(e); $("clock").classList.toggle("over", state === "over");
+    $("target").textContent = fmt(p.target);
+    $("remain").textContent = left >= 0 ? fmt(left) : fmt(-left) + " over";
+    const fill = $("barFill"); fill.style.width = (frac * 100) + "%";
+    fill.style.background = "var(--" + state + ")";
+    pill.className = "pill " + state;
+    pill.textContent = !running ? "Paused" : state === "over" ? "Over target" : state === "warn" ? "Wrap up" : "On time";
+  }
+  const nb = $("nextBtn");
+  if (idx < 0) nb.textContent = "Start";
+  else if (done) nb.textContent = "Finished";
+  else nb.textContent = idx === phases.length - 1 ? "Finish case" : "Mark: next phase";
+  nb.disabled = done;
+  $("pauseBtn").disabled = idx < 0 || done;
+  $("pauseBtn").textContent = running || idx < 0 || done ? "Pause" : "Resume";
+  $("undoBtn").disabled = idx <= 0;
+
+  const rows = phases.map((p, i) => {
+    const act = i < splits.length && splits[i] != null ? splits[i] : (i === idx && !done ? elapsed() : null);
+    const diff = act == null ? null : act - p.target;
+    const cls = diff == null ? "" : diff > 0 ? "over" : diff > -Math.max(10, p.target * 0.2) ? "warn" : "ok";
+    return "<tr class='" + (i === idx && !done ? "current" : "") + "'><td>" + p.name + "</td><td class='num'>" + fmt(p.target) +
+      "</td><td class='num'>" + (act == null ? "-" : fmt(act)) + "</td><td class='num'>" +
+      (diff == null ? "-" : "<span class='pill " + cls + "'>" + fmt(diff, true) + "</span>") + "</td></tr>";
+  });
+  $("rows").innerHTML = rows.join("");
+}
+
+function splitsText() {
+  const name = $("caseName").value.trim() || "Case";
+  const d = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const lines = phases.map((p, i) => {
+    const a = splits[i];
+    return p.name + ": " + (a == null ? "not reached" : fmt(a) + " (target " + fmt(p.target) + ", " + fmt(a - p.target, true) + ")");
+  });
+  const tot = splits.reduce((x, y) => x + (y || 0), 0);
+  return name + " splits, " + d + "\n" + lines.join("\n") + "\nTotal: " + fmt(tot) + " of " + $("totalTarget").textContent;
+}
+async function copySplits() {
+  const t = splitsText();
+  try { await navigator.clipboard.writeText(t); $("toast").textContent = "Copied. Paste it to Claude to log it."; }
+  catch (e) { $("toast").textContent = "Copy was blocked. Select and copy the table instead."; }
+  setTimeout(() => $("toast").textContent = "", 4000);
+}
+
+$("nextBtn").addEventListener("click", next);
+$("pauseBtn").addEventListener("click", pause);
+$("undoBtn").addEventListener("click", undo);
+$("resetBtn").addEventListener("click", reset);
+$("copyBtn").addEventListener("click", copySplits);
+$("preset").addEventListener("change", e => load(e.target.value));
+$("sound").addEventListener("change", () => { ensureAudio(); beep(1, 740); });
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !["INPUT", "SELECT", "BUTTON"].includes(document.activeElement.tagName)) { e.preventDefault(); next(); }
+});
+try { const n = localStorage.getItem("caseTimerName"); if (n) $("caseName").value = n; } catch (e) {}
+$("caseName").addEventListener("input", e => { try { localStorage.setItem("caseTimerName", e.target.value); } catch (x) {} });
+
+load("full");
+setInterval(tick, 250);
+</script>
+</body>
+</html>

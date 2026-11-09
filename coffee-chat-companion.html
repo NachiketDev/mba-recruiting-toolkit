@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coffee chat companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1F4F1; --surface:#FFFFFF; --ink:#1F2A33; --muted:#5F6B74; --line:#D6DDD8;
+  --accent:#1F6F6A; --accent-soft:#DCEBE8; --warn:#A8661A; --warn-soft:#F6E7D2; --done:#9AA6AD;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A1E; --surface:#1C252B; --ink:#E5EBEE; --muted:#9AA7AF; --line:#2E3A42;
+    --accent:#5CC3B8; --accent-soft:#1E3735; --warn:#E3A55A; --warn-soft:#3A2C1A; --done:#5D6A72;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A1E; --surface:#1C252B; --ink:#E5EBEE; --muted:#9AA7AF; --line:#2E3A42;
+  --accent:#5CC3B8; --accent-soft:#1E3735; --warn:#E3A55A; --warn-soft:#3A2C1A; --done:#5D6A72;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 110px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 10px}
+.who{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.who h1{font-size:1.15rem;margin:0}
+.who p{margin:0;color:var(--muted);font-size:.85rem}
+.clock{font-size:2.6rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.clock.over{color:var(--warn)}
+.controls{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+select{font:inherit;color:inherit;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;width:100%}
+.controls select{width:auto}
+
+.band{position:relative;display:flex;height:42px;margin-top:12px;border-radius:8px;overflow:hidden;background:var(--line);gap:2px}
+.seg{flex-basis:0;border:none;background:var(--surface);padding:0 4px;font-size:.7rem;color:var(--muted);text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.seg.past{background:var(--accent-soft)}
+.seg.now{background:var(--accent);color:var(--bg);font-weight:700}
+.seg.view{box-shadow:inset 0 -4px 0 var(--warn)}
+.needle{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px;pointer-events:none;transition:left .9s linear}
+@media (prefers-reduced-motion:reduce){.needle{transition:none}}
+.bandlabels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+
+section.block{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}
+.blockhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.blockhead h2,section.block h2{margin:0;font-size:1.3rem}
+.range{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.goal{margin:6px 0 14px;color:var(--muted)}
+.status{display:inline-block;font-size:.8rem;padding:2px 8px;border-radius:6px;background:var(--warn-soft);color:var(--warn);margin-bottom:8px}
+ul.lines{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ul.lines li button{width:100%;text-align:left;background:var(--bg);border:1.5px solid transparent;border-radius:10px;padding:12px 12px 12px 40px;position:relative}
+ul.lines li button::before{content:"";position:absolute;left:12px;top:15px;width:16px;height:16px;border:2px solid var(--muted);border-radius:50%}
+ul.lines li button.main{font-weight:700;border-color:var(--accent-soft)}
+ul.lines li button[aria-pressed="true"]{color:var(--done);text-decoration:line-through}
+ul.lines li button[aria-pressed="true"]::before{background:var(--accent);border-color:var(--accent)}
+.tip{margin-top:12px;padding:10px 12px;border-left:3px solid var(--warn);background:var(--warn-soft);border-radius:0 8px 8px 0;font-size:.92rem}
+label.lbl{display:block;font-weight:700;font-size:.9rem;margin:14px 0 6px}
+textarea,input[type=text]{width:100%;font:inherit;color:inherit;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:80px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+.panel{display:none}
+.panel.on{display:block}
+.rescue{display:grid;gap:10px;margin-top:14px}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h3{margin:0 0 4px;font-size:1rem}
+.card p{margin:0}
+.say{font-style:italic}
+.avoid{border-color:var(--warn)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--accent);flex:none}
+.rehearse{display:flex;align-items:center;gap:12px;margin-top:10px}
+.rclock{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.rclock.over{color:var(--warn)}
+pre.draft{white-space:pre-wrap;font:inherit;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:12px;margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1.5px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:6}
+nav.tabs .in{display:flex;max-width:640px;width:100%}
+nav.tabs button{flex:1;border:none;background:none;padding:14px 4px;font-weight:700;color:var(--muted)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="who">
+      <div>
+        <h1 id="whoName">New coffee chat</h1>
+        <p id="whoSub">Fill in Prep first</p>
+      </div>
+      <div class="clock" id="clock">0:00</div>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="startBtn">Start chat</button>
+      <button class="btn" id="resetBtn">Reset timer</button>
+      <select id="lengthSel" aria-label="Chat length">
+        <option value="15">15 min</option>
+        <option value="20" selected>20 min</option>
+        <option value="30">30 min</option>
+      </select>
+    </div>
+    <div class="band" id="band" aria-label="Conversation stages"></div>
+    <div class="bandlabels"><span>0:00</span><span id="endLabel">20:00</span></div>
+  </header>
+
+  <!-- PREP -->
+  <div class="panel" id="p-prep">
+    <section class="block">
+      <h2>Who you're talking to</h2>
+      <p class="goal">Two minutes of fact-checking. Wrong basics make you look less prepared than you are.</p>
+      <div class="grid2">
+        <div><label class="lbl" for="fName">First name</label><input type="text" id="fName" data-f="name" placeholder="e.g. Sai"></div>
+        <div><label class="lbl" for="fFirm">Firm</label>
+          <select id="fFirm" data-f="firm"><option>McKinsey</option><option>BCG</option><option>Bain</option><option>Other</option></select></div>
+        <div><label class="lbl" for="fOffice">Their office</label><input type="text" id="fOffice" data-f="office" placeholder="e.g. Los Angeles"></div>
+        <div><label class="lbl" for="fLevel">Seniority</label>
+          <select id="fLevel" data-f="level"><option value="junior">Associate / Consultant</option><option value="mid">EM / Project Leader / CTL</option><option value="senior">Partner / Principal</option></select></div>
+        <div><label class="lbl" for="fGrad">Graduated / joined</label><input type="text" id="fGrad" data-f="grad" placeholder="e.g. HBS '25, joined Sep 2025"></div>
+        <div><label class="lbl" for="fPractice">Practice / focus</label><input type="text" id="fPractice" data-f="practice" placeholder="e.g. Digital, AI and TMT"></div>
+      </div>
+      <label class="lbl" for="fTarget">Office you're targeting at this firm</label>
+      <input type="text" id="fTarget" data-f="target" placeholder="e.g. San Francisco">
+      <p class="tip" id="orderTip"></p>
+    </section>
+
+    <section class="block">
+      <h2>Rehearse your intro</h2>
+      <p class="goal">Say it out loud. Target 30 seconds, hard stop at 45.</p>
+      <p class="say" id="introPreview"></p>
+      <div class="rehearse">
+        <button class="btn primary" id="rBtn">Start</button>
+        <span class="rclock" id="rClock">0:00</span>
+        <span id="rBest" class="range"></span>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>Ready check</h2>
+      <label class="check"><input type="checkbox" data-r="r1"><span>Name, office, grad year and practice confirmed on LinkedIn</span></label>
+      <label class="check"><input type="checkbox" data-r="r2"><span>Intro rehearsed under 45 seconds</span></label>
+      <label class="check"><input type="checkbox" data-r="r3"><span>Three questions read once, order set for this firm</span></label>
+      <label class="check"><input type="checkbox" data-r="r4"><span>Camera, mic and quiet room checked</span></label>
+      <div class="nav"><button class="btn" id="newChatBtn">Start a new person (clears everything)</button></div>
+    </section>
+  </div>
+
+  <!-- LIVE -->
+  <div class="panel on" id="p-live">
+    <section class="block" id="blockCard" aria-live="polite"></section>
+  </div>
+
+  <!-- BACKUP -->
+  <div class="panel" id="p-backup">
+    <div class="rescue">
+      <div class="card"><h3>Reserve question</h3><p class="say">"Is there anything about my background that would concern you in this process?"</p></div>
+      <div class="card"><h3>They're direct and want to cut to it</h3><p>Skip straight to your questions. Don't return to their background.</p></div>
+      <div class="card"><h3>They ask what you're targeting</h3><p class="say">"AI and tech transformation work, while building strong generalist skills around it."</p></div>
+      <div class="card"><h3>They ask about your past work</h3><p>Stay qualitative and lead with the lesson, not the numbers, until your figures are verified.</p></div>
+      <div class="card"><h3>Conversation stalls</h3><p class="say">"What's been the most fun project so far?"</p></div>
+      <div class="card"><h3>They talk long</h3><p>Drop your third question. Never drop the close.</p></div>
+      <div class="card"><h3>They offer more time</h3><p>Use the reserve question, then end by minute 30.</p></div>
+      <div class="card avoid"><h3>Never say</h3><p>"This is a bit raw." "I'm not really prepared." "This is a negative about me." Self-deprecating jokes. Comments on their name. Your preferences are clarity, not flaws.</p></div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="panel" id="p-after">
+    <section class="block">
+      <h2>Thank-you note</h2>
+      <p class="goal">Send the same day. Short, specific, matches their style.</p>
+      <label class="lbl" for="capPoint">Their most useful point</label>
+      <input type="text" id="capPoint" placeholder="e.g. your breakdown of the staffing models">
+      <label class="lbl" for="capRef">Person they suggested you contact</label>
+      <input type="text" id="capRef" placeholder="Name, or leave blank">
+      <label class="check"><input type="checkbox" id="capAsk"><span>Ask for a contact in my target office (only if they didn't already suggest one)</span></label>
+      <pre class="draft" id="draft"></pre>
+      <div class="nav"><button class="btn primary" id="copyBtn">Copy note</button></div>
+    </section>
+    <section class="block">
+      <h2>Follow-up</h2>
+      <label class="check"><input type="checkbox" data-k="f1"><span>Send the thank-you note</span></label>
+      <label class="check"><input type="checkbox" data-k="f2"><span>Connect on LinkedIn with a short note</span></label>
+      <label class="check"><input type="checkbox" data-k="f3"><span>Log the chat and the new name in your networking tracker</span></label>
+      <label class="check"><input type="checkbox" data-k="f4"><span>Reach out to anyone they suggested within a week</span></label>
+      <label class="check"><input type="checkbox" data-k="f5"><span>Write one thing to do better next chat</span></label>
+      <label class="lbl" for="selfNote">One thing to do better next time</label>
+      <textarea id="selfNote" placeholder="e.g. ran over time, skipped the close"></textarea>
+    </section>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in">
+    <button aria-selected="false" data-p="p-prep">Prep</button>
+    <button aria-selected="true" data-p="p-live">Live</button>
+    <button aria-selected="false" data-p="p-backup">Backup</button>
+    <button aria-selected="false" data-p="p-after">After</button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const INTRO = "I spent [N] years at [Company], first in [role] and then [role]. The biggest lesson was [one insight from your work]. That is what draws me to {firm}'s [practice or area] work.";
+
+const Q = {
+  staff: {short:"Q: Staffing", title:"Getting the work you want",
+    goal:"Learn the method, not the theory.",
+    main:"If someone joins wanting AI and tech transformation work, what do the people who actually get staffed on it in year one do differently from those who don't?",
+    follow:"How early is too early to start building those partner relationships?",
+    tip:"Listen for concrete actions: practice affiliation, which partners, interest groups, timing."},
+  office: {short:"Q: Office", title:"What the office sells",
+    goal:"Find out if the office's client base matches the work you want.",
+    main:"How much of your office's work is AI or tech transformation versus other work, and how has that changed in the last year?",
+    follow:"Where do consultants who want this work end up getting staffed from?",
+    tip:"At home-office firms like Bain, this answer decides whether the office is right for you."},
+  position: {short:"Q: Positioning", title:"Presenting your focus",
+    goal:"Learn how to show a spike without seeming narrow.",
+    main:"In interviews, how should I talk about a clear interest in tech transformation without coming across as narrow? What reads as a strength, and what reads as a red flag?",
+    follow:"Does that change between the first round and the final round?",
+    tip:"Answers differ by firm. Note exactly what they say reads as a red flag."}
+};
+const ORDER = {
+  McKinsey:["staff","position","office"],
+  BCG:["staff","office","position"],
+  Bain:["office","staff","position"],
+  Other:["staff","office","position"]
+};
+const ORDER_TIP = {
+  McKinsey:"McKinsey: lead with staffing. Office choice matters less there, so the office question goes last.",
+  BCG:"BCG: staffing first, then office, since staffing is somewhat regional.",
+  Bain:"Bain: lead with the office question. Each office recruits and staffs for itself, so its client base decides your work.",
+  Other:"Default order: staffing, office, positioning."
+};
+const LEVEL_TIP = {
+  junior:" Associates and consultants are strongest on staffing. Keep the positioning question brief.",
+  mid:" EMs and project leaders often interview candidates, so the positioning question is especially valuable.",
+  senior:" Partners interview and sell work, so the office and positioning questions carry the most weight."
+};
+
+const KEY = "coffee-chat-tool-v2";
+const blank = () => ({length:20, startedAt:null, elapsed:0, running:false, viewing:null, said:{}, notes:{},
+  p:{name:"",firm:"McKinsey",office:"",level:"junior",grad:"",practice:"",target:""},
+  ready:{}, cap:{point:"",ref:"",ask:false}, follow:{}, selfNote:"", rBest:null});
+let state = blank();
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) state = Object.assign(blank(), s, {p:Object.assign(blank().p, s.p||{}), cap:Object.assign(blank().cap, s.cap||{})}); } catch(e){}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function fill(s){
+  const p=state.p;
+  return s.replace(/\{name\}/g,p.name||"there").replace(/\{firm\}/g,p.firm==="Other"?"the firm":p.firm)
+          .replace(/\{target\}/g,p.target||"your target").replace(/\{office\}/g,p.office||"your");
+}
+
+function blocks(){
+  const ord = ORDER[state.p.firm]||ORDER.Other;
+  const list = [
+    {id:"open", short:"Open", title:"Open", w:1,
+     goal:"Warm, short, then set up your questions.",
+     lines:["Thanks for making time, {name}. Do we still have about 20 minutes?","I have three specific questions, if that works."],
+     tip:"No small talk about their name or background. Their answer on time sets your length above."},
+    {id:"intro", short:"Intro", title:"Your intro", w:1,
+     goal:"Thirty seconds, then straight into question one.",
+     lines:[INTRO], tip:"No numbers, no drone startup unless asked. Stop after the last sentence."}
+  ];
+  ord.forEach((k,i)=>{ const q=Q[k];
+    list.push({id:"q-"+k, short:q.short, title:(i+1)+". "+q.title, w:5, goal:q.goal,
+      lines:[q.main, "Follow-up: "+q.follow], mainIdx:0,
+      tip:q.tip + (i===2 ? " If you're short on time, skip this one and go to the close." : "")});
+  });
+  list.push({id:"close", short:"Close", title:"Close", w:3, fixed:true,
+    goal:"One new name, permission to stay in touch, end on time yourself.",
+    lines:["This was really helpful, thank you.","Is there anyone you'd suggest I speak with, maybe someone in {target} working on AI or digital?","Would it be okay to stay in touch as recruiting picks up?","I know we're at time, so I'll let you go."],
+    tip:"End the call yourself, even if it's going well."});
+  return list;
+}
+
+function schedule(){
+  const total = state.length*60, bl = blocks();
+  const closeSec = Math.min(180, Math.max(120, Math.round(total*0.15)));
+  const flexW = bl.filter(b=>!b.fixed).reduce((a,b)=>a+b.w,0), flexTotal = total-closeSec;
+  let t=0;
+  const out = bl.map(b=>{ const dur = b.fixed?closeSec:Math.round(flexTotal*b.w/flexW); const r={b,start:t,end:t+dur}; t+=dur; return r; });
+  out[out.length-1].end = total; return out;
+}
+function now(){ return state.running ? state.elapsed+(Date.now()-state.startedAt)/1000 : state.elapsed; }
+function fmt(s){ s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+const started = () => state.running || state.elapsed>0;
+
+let lastActive=null, bandKey="", cardKey="";
+function render(){
+  const sch=schedule(), t=now(), total=state.length*60;
+  let act = sch.findIndex(r=>t>=r.start&&t<r.end); if (act<0) act = t>=total ? sch.length-1 : 0;
+  if (state.running && lastActive!==null && act!==lastActive) state.viewing=null;
+  lastActive=act;
+  const viewIdx = state.viewing===null||state.viewing>=sch.length ? act : state.viewing;
+
+  const p=state.p;
+  document.getElementById("whoName").textContent = p.name ? p.name : "New coffee chat";
+  document.getElementById("whoSub").textContent = p.name ? [p.firm, p.office, p.grad].filter(Boolean).join(", ") : "Fill in Prep first";
+  const clock=document.getElementById("clock"); clock.textContent=fmt(t); clock.classList.toggle("over", t>=total-120 && t>0);
+  document.getElementById("endLabel").textContent=fmt(total);
+  document.getElementById("startBtn").textContent = state.running?"Pause":(state.elapsed>0?"Resume":"Start chat");
+
+  const band=document.getElementById("band");
+  const bk = state.length+"|"+p.firm;
+  if (bandKey!==bk){ bandKey=bk;
+    band.innerHTML = sch.map((r,i)=>`<button class="seg" data-i="${i}" style="flex-grow:${r.end-r.start}" aria-label="${esc(r.b.title)}, ${fmt(r.start)} to ${fmt(r.end)}">${esc(r.b.short)}</button>`).join("")+`<div class="needle" id="needle"></div>`;
+  }
+  [...band.querySelectorAll(".seg")].forEach((el,i)=>{
+    el.classList.toggle("past", started()&&i<act); el.classList.toggle("now", started()&&i===act);
+    el.classList.toggle("view", i===viewIdx&&i!==act); el.setAttribute("aria-current", i===viewIdx?"step":"false");
+  });
+  const needle=document.getElementById("needle");
+  needle.style.left=`calc(${Math.min(100,t/total*100)}% - 1.5px)`; needle.style.display=t>0?"block":"none";
+
+  const live = started()?act:-1;
+  const ck = [viewIdx,state.length,live,p.firm,p.name,p.target].join("|");
+  if (cardKey!==ck){ cardKey=ck;
+    const r=sch[viewIdx], b=r.b, card=document.getElementById("blockCard");
+    card.innerHTML = `
+      ${viewIdx!==act&&started()?`<span class="status">Previewing. Live stage is ${esc(sch[act].b.title)}</span>`:""}
+      <div class="blockhead"><h2>${esc(b.title)}</h2><span class="range">${fmt(r.start)} to ${fmt(r.end)}</span></div>
+      <p class="goal">${esc(b.goal)}</p>
+      <ul class="lines">${b.lines.map((l,j)=>{ const k=b.id+"-"+j;
+        return `<li><button class="${b.mainIdx===j?"main":""}" aria-pressed="${!!state.said[k]}" data-k="${k}">${esc(fill(l))}</button></li>`;}).join("")}</ul>
+      <div class="tip">${esc(b.tip)}</div>
+      <label class="lbl" for="note">Notes</label>
+      <textarea id="note" data-id="${b.id}" placeholder="What they said">${esc(state.notes[b.id]||"")}</textarea>
+      <div class="nav">
+        <button class="btn" id="prevBtn" ${viewIdx===0?"disabled":""}>Previous</button>
+        ${viewIdx!==act&&started()?`<button class="btn" id="liveBtn">Back to live</button>`:""}
+        <button class="btn" id="nextBtn" ${viewIdx===sch.length-1?"disabled":""}>Next</button>
+      </div>`;
+    card.dataset.i=viewIdx;
+  }
+  document.getElementById("orderTip").textContent = (ORDER_TIP[p.firm]||ORDER_TIP.Other) + (LEVEL_TIP[p.level]||"");
+  document.getElementById("introPreview").textContent = "\u201C"+fill(INTRO)+"\u201D";
+}
+
+document.getElementById("band").addEventListener("click",e=>{ const s=e.target.closest(".seg"); if(!s) return; state.viewing=+s.dataset.i; save(); render(); });
+document.getElementById("blockCard").addEventListener("click",e=>{
+  const l=e.target.closest("button[data-k]");
+  if(l){ const k=l.dataset.k; state.said[k]=!state.said[k]; l.setAttribute("aria-pressed",state.said[k]); save(); return; }
+  const cur=+document.getElementById("blockCard").dataset.i;
+  if(e.target.id==="prevBtn"){ state.viewing=cur-1; save(); render(); }
+  if(e.target.id==="nextBtn"){ state.viewing=cur+1; save(); render(); }
+  if(e.target.id==="liveBtn"){ state.viewing=null; save(); render(); }
+});
+document.getElementById("blockCard").addEventListener("input",e=>{ if(e.target.id==="note"){ state.notes[e.target.dataset.id]=e.target.value; save(); } });
+
+document.getElementById("startBtn").addEventListener("click",()=>{
+  if(state.running){ state.elapsed=now(); state.running=false; state.startedAt=null; }
+  else { state.startedAt=Date.now(); state.running=true; state.viewing=null; }
+  save(); render();
+});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(!confirm("Reset the timer to 0:00? Notes stay.")) return;
+  state.running=false; state.elapsed=0; state.startedAt=null; state.viewing=null; save(); render();
+});
+const sel=document.getElementById("lengthSel"); sel.value=String(state.length);
+sel.addEventListener("change",()=>{ state.length=+sel.value; save(); render(); });
+
+document.querySelectorAll("[data-f]").forEach(el=>{
+  el.value = state.p[el.dataset.f] ?? "";
+  el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{ state.p[el.dataset.f]=el.value; save(); render(); draft(); });
+});
+document.querySelectorAll("[data-r]").forEach(c=>{ c.checked=!!state.ready[c.dataset.r]; c.addEventListener("change",()=>{ state.ready[c.dataset.r]=c.checked; save(); }); });
+document.querySelectorAll("[data-k]").forEach(c=>{ if(c.type!=="checkbox") return; c.checked=!!state.follow[c.dataset.k]; c.addEventListener("change",()=>{ state.follow[c.dataset.k]=c.checked; save(); }); });
+
+let rStart=null, rTimer=null;
+const rBtn=document.getElementById("rBtn"), rClock=document.getElementById("rClock"), rBest=document.getElementById("rBest");
+function showBest(){ rBest.textContent = state.rBest!=null ? "Best: "+state.rBest.toFixed(0)+"s" : ""; }
+showBest();
+rBtn.addEventListener("click",()=>{
+  if(rStart===null){ rStart=Date.now(); rBtn.textContent="Stop";
+    rTimer=setInterval(()=>{ const s=(Date.now()-rStart)/1000; rClock.textContent=fmt(s); rClock.classList.toggle("over", s>45); },200); }
+  else { clearInterval(rTimer); const s=(Date.now()-rStart)/1000; rStart=null; rBtn.textContent="Again";
+    if(state.rBest==null||s<state.rBest){ state.rBest=s; save(); } showBest();
+    toast(s<=30?"Right on target":s<=45?"Good, aim for 30":"Too long, trim it"); }
+});
+
+const capP=document.getElementById("capPoint"), capR=document.getElementById("capRef"), capA=document.getElementById("capAsk");
+capP.value=state.cap.point; capR.value=state.cap.ref; capA.checked=state.cap.ask;
+capP.addEventListener("input",()=>{ state.cap.point=capP.value; save(); draft(); });
+capR.addEventListener("input",()=>{ state.cap.ref=capR.value; save(); draft(); });
+capA.addEventListener("change",()=>{ state.cap.ask=capA.checked; save(); draft(); });
+const selfNote=document.getElementById("selfNote"); selfNote.value=state.selfNote;
+selfNote.addEventListener("input",()=>{ state.selfNote=selfNote.value; save(); });
+
+function draft(){
+  const p=state.p, pt=state.cap.point.trim().replace(/[.\s]+$/,""), ref=state.cap.ref.trim();
+  let b = `Hi ${p.name||"[Name]"},\n\nThank you for the time today.`;
+  b += pt ? ` ${pt.charAt(0).toUpperCase()+pt.slice(1)} was exactly what I needed.` : "";
+  if(ref) b += ` I'll reach out to ${ref} as you suggested.`;
+  if(state.cap.ask && !ref) b += `\n\nOne quick ask: since I'm putting ${p.target||"[target office]"} first, is there anyone there working on AI or digital you'd suggest I speak with? No worries at all if not.`;
+  b += "\n\nBest,\n[Your name]";
+  document.getElementById("draft").textContent=b;
+}
+document.getElementById("copyBtn").addEventListener("click",async()=>{
+  const txt=document.getElementById("draft").textContent;
+  try{ await navigator.clipboard.writeText(txt); toast("Note copied"); }
+  catch(e){ const r=document.createRange(); r.selectNodeContents(document.getElementById("draft")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast("Text selected. Copy it manually"); }
+});
+
+document.getElementById("newChatBtn").addEventListener("click",()=>{
+  if(!confirm("Clear everything for a new person?")) return;
+  const keepBest=state.rBest; state=blank(); state.rBest=keepBest; save();
+  document.querySelectorAll("[data-f]").forEach(el=>el.value=state.p[el.dataset.f]);
+  document.querySelectorAll("input[type=checkbox]").forEach(c=>c.checked=false);
+  capP.value=""; capR.value=""; selfNote.value=""; sel.value="20";
+  bandKey=""; cardKey=""; render(); draft(); toast("Ready for a new chat");
+});
+
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id===b.dataset.p));
+  if(b.dataset.p==="p-after") draft();
+  window.scrollTo(0,0);
+}));
+let tt; function toast(m){ const el=document.getElementById("toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1800); }
+
+if(!state.p.name){ document.querySelector('nav.tabs button[data-p="p-prep"]').click(); }
+render(); draft();
+setInterval(()=>{ if(state.running) render(); },1000);
+</script>
+</body>
+</html>
